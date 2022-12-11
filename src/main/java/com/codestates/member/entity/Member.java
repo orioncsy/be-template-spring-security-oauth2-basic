@@ -23,16 +23,6 @@ public class Member extends Auditable {
     @Column(nullable = false, updatable = false, unique = true)
     private String email;
 
-    @Column(length = 100, nullable = false)
-    private String name;
-
-    @Column(length = 13, nullable = false, unique = true)
-    private String phone;
-
-    @Enumerated(value = EnumType.STRING)
-    @Column(length = 20, nullable = false)
-    private MemberStatus memberStatus = MemberStatus.MEMBER_ACTIVE;
-
     @OneToMany(mappedBy = "member")
     private List<Order> orders = new ArrayList<>();
 
@@ -44,10 +34,9 @@ public class Member extends Auditable {
         this.email = email;
     }
 
-    public Member(String email, String name, String phone) {
+    public Member(String email, Stamp stamp) {
         this.email = email;
-        this.name = name;
-        this.phone = phone;
+        this.stamp=stamp;
     }
 
     public void setOrder(Order order) {
@@ -61,18 +50,6 @@ public class Member extends Auditable {
         this.stamp = stamp;
         if (stamp.getMember() != this) {
             stamp.setMember(this);
-        }
-    }
-    public enum MemberStatus {
-        MEMBER_ACTIVE("활동중"),
-        MEMBER_SLEEP("휴면 상태"),
-        MEMBER_QUIT("탈퇴 상태");
-
-        @Getter
-        private String status;
-
-        MemberStatus(String status) {
-           this.status = status;
         }
     }
 }

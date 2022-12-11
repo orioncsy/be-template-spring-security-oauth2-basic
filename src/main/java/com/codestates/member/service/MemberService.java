@@ -26,34 +26,22 @@ import java.util.Optional;
 @Service
 public class MemberService {
     private final MemberRepository memberRepository;
-    private final ApplicationEventPublisher publisher;
 
-    public MemberService(MemberRepository memberRepository,
-                         ApplicationEventPublisher publisher) {
+    public MemberService(MemberRepository memberRepository) {
         this.memberRepository = memberRepository;
-        this.publisher = publisher;
-
     }
 
     public Member createMember(Member member) {
-        verifyExistsEmail(member.getEmail());
-        Member savedMember = memberRepository.save(member);
-
-        // 추가된 부분
-        publisher.publishEvent(new MemberRegistrationApplicationEvent(this, savedMember));
-        return savedMember;
+        if(!existsEmail(member.getEmail())){
+            Member savedMember = memberRepository.save(member);
+            return savedMember;
+        }
+        return null;
     }
 
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.SERIALIZABLE)
     public Member updateMember(Member member) {
         Member findMember = findVerifiedMember(member.getMemberId());
-
-        Optional.ofNullable(member.getName())
-                .ifPresent(name -> findMember.setName(name));
-        Optional.ofNullable(member.getPhone())
-                .ifPresent(phone -> findMember.setPhone(phone));
-        Optional.ofNullable(member.getMemberStatus())
-                .ifPresent(memberStatus -> findMember.setMemberStatus(memberStatus));
 
         return memberRepository.save(findMember);
     }
@@ -84,9 +72,8 @@ public class MemberService {
         return findMember;
     }
 
-    private void verifyExistsEmail(String email) {
+    private boolean existsEmail(String email) {
         Optional<Member> member = memberRepository.findByEmail(email);
-        if (member.isPresent())
-            throw new BusinessLogicException(ExceptionCode.MEMBER_EXISTS);
+        return member.isPresent();
     }
 }
